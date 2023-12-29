@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 from bert4torch.models import *
 from torch.utils.data import DataLoader, Dataset
 from transformers import MT5ForConditionalGeneration, BertTokenizer
-from transformers import BertTokenizer
+#from transformers import BertTokenizer
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 import nltk
