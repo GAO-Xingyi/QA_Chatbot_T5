@@ -1,0 +1,252 @@
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.685 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['水晶王国的建筑风格']
+INFO:__main__:Generated Text: 水晶王国的建筑充满了神秘而独特的风格，建筑物通常使用水晶和大理石等材料，以反射
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.664 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['游戏中有哪几个王国']
+INFO:__main__:Generated Text: 共7个王国，分别是水晶王国、科技王国、冰雪王国、巨龙王国、海洋王国、烈焰
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.661 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['水晶王国有哪些生物']
+INFO:__main__:Generated Text: 包括有宝石鼹鼠、穿山甲、隧道蛇、幽影蝙蝠、矿洞水母等，象征性植物包括
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.675 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['物']
+INFO:__main__:Generated Text: 海洋王国的居民都说她是怪物的女儿，因为她长着满头的蛇发和会
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.664 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['冰雪王国的地理情况']
+INFO:__main__:Generated Text: 雪原是该国度的常见地貌，高耸的雪山、陡峭的冰柱山崖，高低错落。矿产
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.666 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['水晶王国的文化信仰']
+INFO:__main__:Generated Text: 水晶王国的文化信仰以自然元素为主。居民尊敬和崇拜水晶神灵，相信水晶能给他们带来幸福感和增强他们的战斗精神。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['\x1b[A']
+INFO:__main__:Generated Text: 2.骰其所好:获得1次任选点数的骰子机会
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.664 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['游戏中有哪几个王国']
+INFO:__main__:Generated Text: 一共有3个王国，分别是水晶王国、冰雪王国、巨龙王国、烈焰王国和蘑菇王国
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.749 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['  科技王国有哪些生物']
+INFO:__main__:Generated Text: 包括有机械鼠、智能狗、服务机器人、无人飞行机、智能机器人、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机、无人飞行机
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.663 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['科技王国的文化信仰']
+INFO:__main__:Generated Text: 科技王国的文化信仰以科学和技术为核心。居民尊敬和崇拜科学家和工程师。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.659 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['游戏中有哪几个王国']
+INFO:__main__:Generated Text: 共7个王国，分别是水晶王国、科技王国、冰雪王国、巨龙王国、海洋王国、烈焰王国和蘑菇王国
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.657 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['水晶王国的简介']
+INFO:__main__:Generated Text: 水晶王国建立在一条长长的矿洞之中，幽隐而深晦，以其独特的水晶资源而闻名于潮灵世界。水晶矿洞是海洋王国通往烈焰王国的唯一通道，而水晶王国正因为它的地理位置优越，和生产重要的水晶资源，在潮灵王国交易通商致富。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.663 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['菲属于什么王国']
+INFO:__main__:Generated Text: 稀有
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.661 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['阿瓜属于什么王国']
+INFO:__main__:Generated Text: 精英
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['莉亚特属于什么类型的潮灵']
+INFO:__main__:Generated Text: “莉亚特”（游戏角色）属于幻梦工厂
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.659 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['丽莎属于什么类型的潮灵']
+INFO:__main__:Generated Text: “丽莎”（游戏角色）属于幻梦工厂
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.658 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['丽莎属于什么类型的潮灵\x08']
+INFO:__main__:Generated Text: “丽莎”（游戏角色）属于幻梦工厂
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.657 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['丽莎的职业类型是？']
+INFO:__main__:Generated Text: 法师
+INFO:__main__:User Input: ['██']
+INFO:__main__:Generated Text: 王—国—建—造—办
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.682 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['████烟火神背景故事']
+INFO:__main__:Generated Text: "烟火神是一个争强好斗的活跃分子，在发展年代，他隶属于一个王国联合势力的特别行动队，对制作炸弹、毒气弹这一类的非常擅长。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.658 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['“罗妮”（游戏角色）的背景故事是什么']
+INFO:__main__:Generated Text: "在很久以前，罗妮生活在水晶王国的深海城市中。她一直对深海的神秘之处充满好奇，但这个城市却以其安逸和平静而著名，人们很少涉足深海的未知领域。然而，罗妮不同寻常的勇气和冒险精神使她想要探索更多。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.661 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['潮灵链接说明']
+INFO:__main__:Generated Text: "上阵数满时默认选取上阵阵容作为链接主潮灵，否则选取当前等级最高的6只潮灵会成为链接主潮灵。链接等级取这6只潮灵中最低等级，链接等级将共享与其他潮灵等级。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.656 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['科技王国的背景故事']
+INFO:__main__:Generated Text: 科技王国附近通常是由齿轮零件、工业废弃机器、电线芯片等人类电器聚集区块所形成的。通常也会伴随着机械工作而产生不稳定的气候。科技国度的潮灵性格大多极具钻研精神，极具创造天赋，友好纯真、同时渴望得到认可。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['潮灵是怎么诞生的']
+INFO:__main__:Generated Text: "为了在人类社会建立更宏大的潮玩市场，突破现有的潮玩理念，韩博士受到四大厂商的邀请，希望能研究出一种独特的潮玩，创造一个空前的潮玩世界。经过韩博士的潜心研究，终于研究出了一种独特的潮玩生产方案：将人类催眠后带入一个奇幻世界，把人类的灵魂嫁接进入手办的身体里，变成一种拥有灵魂的独特潮玩手办：潮灵。韩博士希望通过这种方式，让大家都变成可爱手办的样子，使人类世界斗争消失，充满欢乐。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.661 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['能能古典协会的中层介绍']
+INFO:__main__:Generated Text: 黄天原任职古典协会的理事长助理，从历史中文学系毕业后，一直在古典协会任职，兢兢业业十余年。平时低调寡言，不爱张扬，却酷爱历史小说，尤其热爱民间历史传说，喜欢研究那些历史上低调却大有作为的神仙妖怪或武将文人。是个不修边幅的沉默大叔，却能将理事长安排的任务很好地完成，受到理事长的青睐。于是在理事长的暗中授意下，黄天制造了潮灵“黄仙”，成为了古典协会潮灵计划的负责人和执行者之一。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.676 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['潮流公司的中层介绍']
+INFO:__main__:Generated Text: 在绿幽的眼中，设计玩具，就是她一生的追求。身为潮流公司最大的商务品牌总监——欧阳先生的得力手下，绿幽小姐一直秉持着严于律己，待人严苛的处事方式。无论发生了什么，都不会影响绿幽对工作的专注。而她极度认真的工作态度，不仅令部分同事感到害怕，也赢得了部分同事和上司的好评。欧阳先生曾提出，若绿幽的业绩再进一步，便可放心把自己总监的位置交给她。为了完成更伟大的业绩，绿幽毅然接任了潮灵计划的执行任务，并且心中早已有了方案。什么可以代表潮流？是潮流玩具。怎么样可以引领潮流？只要像发条木偶一样无休止的工作。这是一次机会，将自己变为木偶玩具，一只永远在设计潮玩的潮灵，永不疲惫，永远工作。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.661 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['冒险之旅还有哪些互动玩法、']
+INFO:__main__:Generated Text: "在每张地图中，除了有可挑战的关卡，还有各种各样的互动物品等待着潮灵们去发掘，有的是可以结识新伙伴的潮灵闪抽，有的是可以装饰王国的装饰道具，也有能获得生产资源的采集物，更有能改变地图地形的互动点。
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['吕布属于什么类型的潮灵']
+INFO:__main__:Generated Text: 史诗
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['吕布的职业类型是什么？']
+INFO:__main__:Generated Text: 战士
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['装备重生的材料100%返还吗']
+INFO:__main__:Generated Text: 强化装备消耗的材料在装备重生时全部返还
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.660 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['梅姬羁绊有哪些']
+INFO:__main__:Generated Text: 赢得机械拳击大赛的冠军才是唯一目标
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.660 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['米薇羁绊有哪些']
+INFO:__main__:Generated Text: 泡泡脑瓜
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.662 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['“冷冷”（游戏角色）和“米薇”（游戏角色）的羁绊名字叫什么呢？']
+INFO:__main__:Generated Text: 冷冷美人
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.659 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['丽莎羁绊有哪些']
+INFO:__main__:Generated Text: 荡涤四海
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.659 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['  “悟空”（游戏角色）和“美杜莎”（游戏角色）的羁绊名字叫什么']
+INFO:__main__:Generated Text: 万妖之王
+DEBUG:jieba:Building prefix dict from the default dictionary ...
+DEBUG:jieba:Loading model from cache /tmp/jieba.cache
+DEBUG:jieba:Loading model cost 0.678 seconds.
+DEBUG:jieba:Prefix dict has been built successfully.
+INFO:__main__:User Input: ['如何获得“泡泡脑”（游戏角色）？']
+INFO:__main__:Generated Text: 可以从潮灵扭蛋机中获得该潮灵角色
+INFO:__main__:User Input: ['游戏推广合作']
+INFO:__main__:Generated Text: 通过参与联盟中的各个设施可获得名望值，代表该成员的活跃程度，周名望会本周清空，退出联盟也会清空，个人总名望永久保留。
+INFO:__main__:User Input: ['介绍一下这个游戏有几个王国？']
+INFO:__main__:Generated Text: 共7个王国，分别是水晶王国、科技王国、冰雪王国、巨龙王国、海洋王国、烈焰王国和蘑菇王国
+INFO:__main__:User Input: ['杜铎如何获得']
+INFO:__main__:Generated Text: 可以从潮灵扭蛋机和学院商店中获得该潮灵角色
+INFO:__main__:User Input: ['\x1b[A']
+INFO:__main__:Generated Text: 回答
+INFO:__main__:User Input: ['艾尔属于什么级别的潮灵']
+INFO:__main__:Generated Text: “艾尔”（游戏角色）属于幻梦工厂
+INFO:__main__:User Input: ['阿帕属于什么级别的潮灵']
+INFO:__main__:Generated Text: “阿帕”（游戏角色）属于幻梦工厂
+INFO:__main__:User Input: ['烟火神属于什么级别的潮灵']
+INFO:__main__:Generated Text: “烟火神”（游戏角色）属于科技集团
+INFO:__main__:User Input: ['罗妮属于什么王国']
+INFO:__main__:Generated Text: 深海遨游
+INFO:__main__:User Input: ['潮灵和什么联动了']
+INFO:__main__:Generated Text: "为了在人类社会建立更宏大的潮玩市场，突破现有的潮玩理念，韩博士受到四大厂商的邀请，希望能研究出一种独特的潮玩，创造一个空前的潮玩世界。经过韩博士的潜心研究，终于研究出了一种独特的潮玩生产方案：将人类催眠后带入一个奇幻世界，把人类的灵魂嫁接进入手办的身体里，变成一种拥有灵魂的独特潮玩手办：潮灵。韩博士希望通过这种方式，让大家都变成可爱手办的样子，使人类世界斗争消失，充满欢乐。韩博士的女儿-小魔女，为帮助韩博士达成心愿，自愿成为第一只潮灵，成为韩博士方案的执行者。为了创造童话般美好的潮灵世界，小魔女只选择淳朴、童真的小孩，将人类世界的孩子带进潮灵世界，让孩子们的灵魂与潮玩一起成长，最后也化作潮灵，保持童心和快乐。但魔女的内心也挣扎迷茫，不知道这样做是否正确。"
+INFO:__main__:User Input: ['链接的用途']
+INFO:__main__:Generated Text: 链接中的所有头部厂商的头像可以在界面底部显示，他们的活跃程度将共享与其他潮灵等级。共享等级中的潮灵将无法进行升级操作，已升级过的潮灵重生后将自动同步链接等级。可随意替换链接中的主潮灵，替换后链接等级将同步最新主潮灵中的最低等级当链接等级达到250级后，将自动进入巅峰链接等级，提升巅峰等级可使潮灵等级突破250级。当巅峰等级达到250级之后，每拥有1只不朽品质的潮灵，巅峰等级上限增加5级"
+INFO:__main__:User Input: ['我该如何获得更多与测试相关的信息？']
+INFO:__main__:Generated Text: 可以从潮灵扭蛋机中获得该潮灵角色
+INFO:__main__:User Input: ['我该如何获得更多与测试相关的信息？']
+INFO:__main__:Generated Text: 可以从潮灵扭蛋机中获得该潮灵角色
+INFO:__main__:User Input: ['\x1b[A']
+INFO:__main__:Generated Text: 回答
+INFO:__main__:User Input: ['怎么换绑']
+INFO:__main__:Generated Text: 您可以登录盛天用户中心http://eyus.stnts.com/new/v2/login.do，按照提示进行操作即可。
+INFO:__main__:User Input: ['有没有礼包码']
+INFO:__main__:Generated Text: 礼包码有clwgqq、vip666、vip777、vip888；另外您可加入官方qq群638488060，群内有发布进群礼包哦
+INFO:__main__:User Input: ['获得更多与测试相关的信息']
+INFO:__main__:Generated Text: 可以从潮灵扭蛋机中获得该潮灵角色
+INFO:__main__:User Input: ['测试相关的信息']
+INFO:__main__:Generated Text: 本次潮灵王国：起源测试的下载链接：https://d.shengtiangames.com/clwgshengtianpidig8kqe9de1700961453614.apk
+INFO:__main__:User Input: ['阿鲁鲁羁绊有哪些']
+INFO:__main__:Generated Text: 双子座
+INFO:__main__:User Input: ['力昂羁绊有哪些']
+INFO:__main__:Generated Text: 拥有一套崭新的智能盔甲
+INFO:__main__:User Input: ['牟九九背景故事']
+INFO:__main__:Generated Text: "作为巨龙王国岩岩村村长的妹妹，牟重重对她极尽宠爱，因此也从不同程度上造就了牟九九娇蛮任性、火辣率真的性格，而她的口味也如同性格一般，嗜辣如命。牟九九喜欢烹饪，特别喜欢做各种辣式菜肴，但一般的潮灵可承受不起这份辣度。喜欢挑战自我、打抱不平也是牟九九直爽而善良的一面。"
