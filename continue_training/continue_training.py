@@ -262,6 +262,59 @@ def init_argument():
     args = parser.parse_args()
     return args
 
+# def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
+#     optimizer = AdamW(model.parameters(), lr=learning_rate)
+#
+#     for epoch in range(num_epochs):
+#         # 初始化 loss
+#         loss = None
+#
+#         for batch in data_loader:
+#             # 检查张量是否为空或批次是否有效
+#             if not batch['input_ids'] or not batch['attention_mask'] or not batch['decoder_input_ids'] or not batch['decoder_attention_mask']:
+#                 continue
+#
+#             # 提取张量
+#             input_ids = torch.tensor(batch['input_ids'][0]).squeeze(0).to(device)
+#             attention_mask = torch.tensor(batch['attention_mask'][0]).squeeze(0).to(device)
+#             decoder_input_ids = torch.tensor(batch['decoder_input_ids'][0]).squeeze(0).to(device)
+#             decoder_attention_mask = torch.tensor(batch['decoder_attention_mask'][0]).squeeze(0).to(device)
+#
+#             # 检查输入形状
+#             if input_ids.dim() == 0 or attention_mask.dim() == 0 or decoder_input_ids.dim() == 0 or decoder_attention_mask.dim() == 0:
+#                 continue
+#
+#             input_shape = input_ids.size()
+#             print("input_ids.shape: ", input_shape)
+#             print("attention_mask.shape: ", attention_mask.shape)
+#             print("decoder_input_ids.shape: ", decoder_input_ids.shape)
+#             print("decoder_attention_mask.shape: ", decoder_attention_mask.shape)
+#
+#             # 前向传播
+#             outputs = model(
+#                 input_ids=input_ids,
+#                 attention_mask=attention_mask,
+#                 decoder_input_ids=decoder_input_ids,
+#                 decoder_attention_mask=decoder_attention_mask
+#             )
+#
+#             # 计算损失
+#             loss = outputs.loss
+#
+#             # 反向传播
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
+#
+#         # 检查 loss 是否被计算
+#         if loss is not None:
+#             print(f"第 {epoch + 1}/{num_epochs} 轮 - 损失: {loss.item()}")
+#
+#     # 保存微调后的模型
+#     model.save_pretrained("./continued_model")
+
+from tqdm import tqdm
+
 def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
     optimizer = AdamW(model.parameters(), lr=learning_rate)
 
@@ -269,7 +322,8 @@ def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
         # 初始化 loss
         loss = None
 
-        for batch in data_loader:
+        # 使用 tqdm 包装数据加载器，创建进度条
+        for batch in tqdm(data_loader, desc=f'Epoch {epoch + 1}/{num_epochs}'):
             # 检查张量是否为空或批次是否有效
             if not batch['input_ids'] or not batch['attention_mask'] or not batch['decoder_input_ids'] or not batch['decoder_attention_mask']:
                 continue
@@ -311,8 +365,7 @@ def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
             print(f"第 {epoch + 1}/{num_epochs} 轮 - 损失: {loss.item()}")
 
     # 保存微调后的模型
-    model.save_pretrained("path/to/continued_model")
-
+    model.save_pretrained("./continued_model")
 
 
 
