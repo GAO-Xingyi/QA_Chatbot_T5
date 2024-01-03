@@ -7,12 +7,10 @@ from tqdm.auto import tqdm
 from bert4torch.models import *
 from torch.utils.data import DataLoader, Dataset
 from transformers import MT5ForConditionalGeneration, BertTokenizer
-from transformers import T5ForConditionalGeneration, AdamW
 #from transformers import BertTokenizer
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 import nltk
-from tqdm import tqdm
 
 int_classes = int
 string_classes = str
@@ -214,9 +212,11 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
 
         # 保存模型
         if args.data_parallel and torch.cuda.is_available():
-            torch.save(model.module, os.path.join(args.model_dir, 'summary_model'))
+            torch.save(model.module, os.path.join(args.model_dir, 'summary_model.pt'))  # 只保存最终得到的模型
         else:
-            torch.save(model, os.path.join(args.model_dir, 'summary_model'))
+            torch.save(model.state_dict(), os.path.join(args.model_dir, 'model.pt'))
+
+
 
     # 验证
     model.eval()
@@ -248,12 +248,12 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
 
 def init_argument():
     parser = argparse.ArgumentParser(description='t5-pegasus-chinese')
-    parser.add_argument('--train_data', default='./update_dataset/caoling.tsv')
-    parser.add_argument('--dev_data', default='./update_dataset/caoling.tsv')
-    parser.add_argument('--pretrain_model', default='../t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./continue_training_model')
+    parser.add_argument('--train_data', default='./data/caoling.tsv')
+    parser.add_argument('--dev_data', default='./data/caoling.tsv')
+    parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
+    parser.add_argument('--model_dir', default='./continue_training/continue_training_model')
 
-    parser.add_argument('--num_epoch', default=1000, help='number of epoch')
+    parser.add_argument('--num_epoch', default=2, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
     parser.add_argument('--lr', default=2e-4, help='learning rate')
     parser.add_argument('--data_parallel', default=False)
@@ -264,112 +264,38 @@ def init_argument():
     return args
 
 
-
-# def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
-#     # 使用AdamW优化器，指定学习率
-#     optimizer = AdamW(model.parameters(), lr=learning_rate)
-#
-#     for epoch in range(num_epochs):
-#         # 初始化损失
-#         total_loss = 0.0
-#
-#         # 使用tqdm创建进度条
-#         for batch in tqdm(data_loader, desc=f'Epoch {epoch + 1}/{num_epochs}'):
-#             # 将张量移到设备上
-#             batch = {k: v.to(device) for k, v in batch.items()}
-#
-#             # 前向传播
-#             outputs = model(**batch)
-#             loss = outputs.loss
-#
-#             # 反向传播和优化
-#             loss.backward()
-#             optimizer.step()
-#             optimizer.zero_grad()
-#
-#             # 累积总损失
-#             total_loss += loss.item()
-#
-#         # 打印每个epoch的平均损失
-#         average_loss = total_loss / len(data_loader)
-#         print(f"Epoch {epoch + 1}/{num_epochs}, 平均损失: {average_loss}")
-#
-#     # 保存微调后的模型
-#     model.save_pretrained("./fine_tuned_model")
-
-import torch.nn.functional as F
-
-def continue_training(model, train_data, tokenizer, num_epochs=3, learning_rate=5e-5):
-    """Continue training a saved model.
-
-    Args:
-        model: The loaded model to continue training.
-        train_data: The training data iterator (a list or list of lists).
-        tokenizer: The tokenizer used for the model.
-        num_epochs: Number of epochs to continue training.
-        learning_rate: Learning rate for the optimizer.
-    """
-
-    def load_model(model, model_path):
-        # 加载模型的状态字典
-        state_dict = torch.load(model_path)
-        model.load_state_dict(state_dict)
-        return model
-
-    model = load_model(model, os.path.join(args.model_dir, 'summary_model.pt'))
-
-    # 其他代码保持不变
-
-    from torch.optim import AdamW
-
-    optimizer = AdamW(model.parameters(), lr=learning_rate)  # 使用 PyTorch 内置的 AdamW
-
-    for epoch in range(num_epochs):
-        total_loss = 0.0
-
-        for batch in tqdm(train_data, desc='Epoch {}:'.format(epoch)):
-            batch = [tokenizer.encode(sample, return_tensors='pt', padding=True, max_length=args.max_len_generate) for sample in batch]  # 添加 padding 和 max_length 参数
-            batch = torch.cat(batch).to(device)
-
-            inputs = {
-                'input_ids': batch,
-                # ... 其他输入张量
-            }
-
-            outputs = model(**inputs)
-            loss = outputs[0]  # Access the loss from model outputs
-
-            # 后续处理 loss（例如计算梯度、更新参数）
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-
-            total_loss += loss.item()
-
-        print("Epoch {}: Training Loss:s {}".format(epoch, total_loss / len(train_data)))
-
-    # 保存训练后的模型
-    torch.save(model, './update_model')  # 替换为你要保存模型的路径
-
-
-
-
-
 if __name__ == '__main__':
+    # step 1. init argument
     args = init_argument()
 
+    # step 2. prepare training data and validation data
     tokenizer = T5PegasusTokenizer.from_pretrained(args.pretrain_model)
+
     train_data = prepare_data(args, args.train_data, tokenizer, term='train')
     dev_data = prepare_data(args, args.dev_data, tokenizer, term='dev')
 
-
+    # step 3. load pretrain model
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # 初始化模型和优化器
-    model = MT5ForConditionalGeneration.from_pretrained(args.pretrain_model)
+    # Check the number of available GPUs
+    if torch.cuda.is_available():
+        num_gpus = torch.cuda.device_count()
+        print(f"Number of available GPUs: {num_gpus}")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        # Move the model to GPU
+        model = MT5ForConditionalGeneration.from_pretrained(
+            args.pretrain_model).to(device)
 
-    # 继续训练
-    # continue_training(model, train_data,tokenizer=tokenizer, num_epochs=args.num_epoch, learning_rate=args.lr)
-    continue_training(model, train_data, tokenizer, num_epochs=5, learning_rate=1e-4)
+        if args.data_parallel and num_gpus > 1:
+            model = torch.nn.DataParallel(model)
+
+    # step 4. finetune
+    adam = torch.optim.Adam(model.parameters(), lr=args.lr)
+
+    # Adjust the num_workers based on your system specifications
+    train_data = DataLoader(train_data, batch_size=args.batch_size, collate_fn=default_collate,
+                            pin_memory=True, num_workers=4)
+    dev_data = DataLoader(dev_data, batch_size=args.batch_size, collate_fn=default_collate,
+                          pin_memory=True, num_workers=4)
+
+    train_model(model, adam, train_data, dev_data, tokenizer, device, args)
