@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 from bert4torch.models import *
 from torch.utils.data import DataLoader, Dataset
 from transformers import MT5ForConditionalGeneration, BertTokenizer
+from transformers import T5ForConditionalGeneration, AdamW
 #from transformers import BertTokenizer
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
@@ -261,91 +262,56 @@ def init_argument():
     args = parser.parse_args()
     return args
 
-def continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args):
-    # 加载检查点
-    loaded_model = torch.load(os.path.join(args.model_dir, 'continue_training_model'))
-    # 从检查点中提取 state_dict
-    model_state_dict = loaded_model.state_dict()
+def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
+    optimizer = AdamW(model.parameters(), lr=learning_rate)
 
-    # 加载模型的 state_dict
-    model.load_state_dict(model_state_dict)
+    for epoch in range(num_epochs):
+        # 初始化 loss
+        loss = None
 
-    start_epoch = 0
+        for batch in data_loader:
+            # 检查张量是否为空或批次是否有效
+            if not batch['input_ids'] or not batch['attention_mask'] or not batch['decoder_input_ids'] or not batch['decoder_attention_mask']:
+                continue
 
-    # 将模型设置为训练模式
-    model.train()
+            # 提取张量
+            input_ids = torch.tensor(batch['input_ids'][0]).squeeze(0).to(device)
+            attention_mask = torch.tensor(batch['attention_mask'][0]).squeeze(0).to(device)
+            decoder_input_ids = torch.tensor(batch['decoder_input_ids'][0]).squeeze(0).to(device)
+            decoder_attention_mask = torch.tensor(batch['decoder_attention_mask'][0]).squeeze(0).to(device)
 
-    for epoch in range(start_epoch, args.num_epoch + start_epoch):
-        for i, batch in enumerate(train_data):
-            # 检查 batch 中每个元素是否是字符串，如果是，则构建一个包含 'question' 和 'answer' 键的字典
-            for cur in batch:
-                if isinstance(cur, str):
-                    cur = {'question': 'Default Question', 'answer': cur}
+            # 检查输入形状
+            if input_ids.dim() == 0 or attention_mask.dim() == 0 or decoder_input_ids.dim() == 0 or decoder_attention_mask.dim() == 0:
+                continue
 
-                # 继续下面的代码，使用 cur 字典构建 cur_input
+            input_shape = input_ids.size()
+            print("input_ids.shape: ", input_shape)
+            print("attention_mask.shape: ", attention_mask.shape)
+            print("decoder_input_ids.shape: ", decoder_input_ids.shape)
+            print("decoder_attention_mask.shape: ", decoder_attention_mask.shape)
 
-                cur_input = {
-                    'input_ids': torch.tensor(
-                        tokenizer.encode(cur.get('question', 'Default Question'), max_length=args.max_len_generate,
-                                         truncation='only_first')).to(device),
-                    'decoder_input_ids': torch.tensor(
-                        tokenizer.encode(cur['answer'], max_length=args.max_len_generate, truncation='only_first')).to(
-                        device),
-                    'attention_mask': [1] * len(cur.get('question', 'Default Question')),
-                    'decoder_attention_mask': [1] * len(cur['answer'])
-                }
+            # 前向传播
+            outputs = model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                decoder_input_ids=decoder_input_ids,
+                decoder_attention_mask=decoder_attention_mask
+            )
 
-                # 在模型前向传播之前解包字典
-                prob = model(**cur_input)[0]
-                mask = cur_input['decoder_attention_mask'][:, 1:].reshape(-1).bool()
-                prob = prob[:, :-1]
-                prob = prob.reshape((-1, prob.size(-1)))[mask]
-                labels = cur_input['decoder_input_ids'][:, 1:].reshape(-1)[mask]
-                loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
-                loss = loss_fct(prob, labels)
-                if i % 100 == 0:
-                    print("Epoch {}, Iter {}: Training Loss: {}".format(epoch, i, loss.item()))
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
+            # 计算损失
+            loss = outputs.loss
 
-        # 保存模型检查点
-        torch.save({
-            'model_state_dict': model.state_dict(),
-        }, os.path.join(args.model_dir, 'summary_model'))
+            # 反向传播
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # 在每个纪元之后验证模型
-        model.eval()
-        generated_responses = []
-        reference_answers = []
-        for batch in dev_data:
-            # 在每个子列表中逐个处理元素
-            for feature in batch:
-                # 检查 feature 的类型
-                if isinstance(feature, str):
-                    feature = {'answer': feature}
-                elif not isinstance(feature, dict):
-                    # 如果不是字符串也不是字典，跳过当前元素
-                    continue
+        # 检查 loss 是否被计算
+        if loss is not None:
+            print(f"第 {epoch + 1}/{num_epochs} 轮 - 损失: {loss.item()}")
 
-                title = feature['answer']
-                content = {k: v for k, v in feature.items() if k != 'answer'}
-                gen = model.generate(max_length=args.max_len_generate,
-                                     eos_token_id=tokenizer.sep_token_id,
-                                     decoder_start_token_id=tokenizer.cls_token_id,
-                                     **content)
-                gen = tokenizer.batch_decode(gen, skip_special_tokens=True)
-                gen = [item.replace(' ', '') for item in gen]
-                generated_responses.extend(gen)
-                reference_answers.extend([title])
-
-        # 计算BLEU分数
-        bleu_score = compute_bleu([reference_answers], [generated_responses])
-        print("Validation BLEU Score (Epoch {}): {}".format(epoch, bleu_score))
-
-        # 将模型重新设置为训练模式
-        model.train()
-
+    # 保存微调后的模型
+    model.save_pretrained("path/to/continued_model")
 
 
 
@@ -364,4 +330,4 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     # 继续训练
-    continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args)
+    continue_training(model, train_data, num_epochs=args.num_epoch, learning_rate=args.lr)
