@@ -1,5 +1,9 @@
 # Detailed Introduction to Chinese QA Generation and Fine-Tuning Project
 
+## Readme
+- [简体中文](readme/README_zh.md)
+- [日本語](readme/README_jp.md)
+
 ## Project Background
 
 With the rapid development of artificial intelligence technology, research and applications in the field of natural language processing have become increasingly important. Chinese question-answering (QA) generation is a crucial task in this domain, aiming to enable computer systems to understand and generate natural responses in human language. In various application scenarios such as intelligent assistants, online customer service, and information retrieval, Chinese QA generation systems can provide efficient and intelligent interactive experiences.
