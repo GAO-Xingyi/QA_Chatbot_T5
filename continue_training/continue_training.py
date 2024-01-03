@@ -246,12 +246,12 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
 
 def init_argument():
     parser = argparse.ArgumentParser(description='t5-pegasus-chinese')
-    parser.add_argument('--train_data', default='./data/caoling.tsv')
-    parser.add_argument('--dev_data', default='./data/caoling.tsv')
-    parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./saved_model_new_2000e_update')
+    parser.add_argument('--train_data', default='./update_dataset/caoling.tsv')
+    parser.add_argument('--dev_data', default='./update_dataset/caoling.tsv')
+    parser.add_argument('--pretrain_model', default='../t5_pegasus_pretrain')
+    parser.add_argument('--model_dir', default='./continue_training_model')
 
-    parser.add_argument('--num_epoch', default=2000, help='number of epoch')
+    parser.add_argument('--num_epoch', default=1000, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
     parser.add_argument('--lr', default=2e-4, help='learning rate')
     parser.add_argument('--data_parallel', default=False)
@@ -261,38 +261,107 @@ def init_argument():
     args = parser.parse_args()
     return args
 
+def continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args):
+    # 加载检查点
+    loaded_model = torch.load(os.path.join(args.model_dir, 'continue_training_model'))
+    # 从检查点中提取 state_dict
+    model_state_dict = loaded_model.state_dict()
+
+    # 加载模型的 state_dict
+    model.load_state_dict(model_state_dict)
+
+    start_epoch = 0
+
+    # 将模型设置为训练模式
+    model.train()
+
+    for epoch in range(start_epoch, args.num_epoch + start_epoch):
+        for i, batch in enumerate(train_data):
+            # 检查 batch 中每个元素是否是字符串，如果是，则构建一个包含 'question' 和 'answer' 键的字典
+            for cur in batch:
+                if isinstance(cur, str):
+                    cur = {'question': 'Default Question', 'answer': cur}
+
+                # 继续下面的代码，使用 cur 字典构建 cur_input
+
+                cur_input = {
+                    'input_ids': torch.tensor(
+                        tokenizer.encode(cur.get('question', 'Default Question'), max_length=args.max_len_generate,
+                                         truncation='only_first')).to(device),
+                    'decoder_input_ids': torch.tensor(
+                        tokenizer.encode(cur['answer'], max_length=args.max_len_generate, truncation='only_first')).to(
+                        device),
+                    'attention_mask': [1] * len(cur.get('question', 'Default Question')),
+                    'decoder_attention_mask': [1] * len(cur['answer'])
+                }
+
+                # 在模型前向传播之前解包字典
+                prob = model(**cur_input)[0]
+                mask = cur_input['decoder_attention_mask'][:, 1:].reshape(-1).bool()
+                prob = prob[:, :-1]
+                prob = prob.reshape((-1, prob.size(-1)))[mask]
+                labels = cur_input['decoder_input_ids'][:, 1:].reshape(-1)[mask]
+                loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
+                loss = loss_fct(prob, labels)
+                if i % 100 == 0:
+                    print("Epoch {}, Iter {}: Training Loss: {}".format(epoch, i, loss.item()))
+                loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+
+        # 保存模型检查点
+        torch.save({
+            'model_state_dict': model.state_dict(),
+        }, os.path.join(args.model_dir, 'summary_model'))
+
+        # 在每个纪元之后验证模型
+        model.eval()
+        generated_responses = []
+        reference_answers = []
+        for batch in dev_data:
+            # 在每个子列表中逐个处理元素
+            for feature in batch:
+                # 检查 feature 的类型
+                if isinstance(feature, str):
+                    feature = {'answer': feature}
+                elif not isinstance(feature, dict):
+                    # 如果不是字符串也不是字典，跳过当前元素
+                    continue
+
+                title = feature['answer']
+                content = {k: v for k, v in feature.items() if k != 'answer'}
+                gen = model.generate(max_length=args.max_len_generate,
+                                     eos_token_id=tokenizer.sep_token_id,
+                                     decoder_start_token_id=tokenizer.cls_token_id,
+                                     **content)
+                gen = tokenizer.batch_decode(gen, skip_special_tokens=True)
+                gen = [item.replace(' ', '') for item in gen]
+                generated_responses.extend(gen)
+                reference_answers.extend([title])
+
+        # 计算BLEU分数
+        bleu_score = compute_bleu([reference_answers], [generated_responses])
+        print("Validation BLEU Score (Epoch {}): {}".format(epoch, bleu_score))
+
+        # 将模型重新设置为训练模式
+        model.train()
+
+
+
+
 
 if __name__ == '__main__':
-    # step 1. init argument
     args = init_argument()
 
-    # step 2. prepare training data and validation data
     tokenizer = T5PegasusTokenizer.from_pretrained(args.pretrain_model)
     train_data = prepare_data(args, args.train_data, tokenizer, term='train')
     dev_data = prepare_data(args, args.dev_data, tokenizer, term='dev')
 
-    # step 3. load pretrain model
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # Check the number of available GPUs
-    if torch.cuda.is_available():
-        num_gpus = torch.cuda.device_count()
-        print(f"Number of available GPUs: {num_gpus}")
+    # 初始化模型和优化器
+    model = MT5ForConditionalGeneration.from_pretrained(args.pretrain_model).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-        # Move the model to GPU
-        model = MT5ForConditionalGeneration.from_pretrained(
-            args.pretrain_model).to(device)
-
-        if args.data_parallel and num_gpus > 1:
-            model = torch.nn.DataParallel(model)
-
-    # step 4. finetune
-    adam = torch.optim.Adam(model.parameters(), lr=args.lr)
-
-    # Adjust the num_workers based on your system specifications
-    train_data = DataLoader(train_data, batch_size=args.batch_size, collate_fn=default_collate,
-                            pin_memory=True, num_workers=4)
-    dev_data = DataLoader(dev_data, batch_size=args.batch_size, collate_fn=default_collate,
-                          pin_memory=True, num_workers=4)
-
-    train_model(model, adam, train_data, dev_data, tokenizer, device, args)
+    # 继续训练
+    continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args)
