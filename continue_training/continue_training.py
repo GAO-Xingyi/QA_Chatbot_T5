@@ -264,6 +264,31 @@ def init_argument():
     args = parser.parse_args()
     return args
 
+import torch
+
+def data_normalization(train_data):
+    for cur in train_data:
+        cur['input_ids'] = torch.tensor(cur['input_ids'])
+        cur['attention_mask'] = torch.tensor(cur['attention_mask'])
+        cur['decoder_input_ids'] = torch.tensor(cur['decoder_input_ids'])
+        cur['decoder_attention_mask'] = torch.tensor(cur['decoder_attention_mask'])
+
+    for cur in train_data:
+        input_seq_len = cur['input_ids'].shape[0]
+        decoder_seq_len = cur['decoder_input_ids'].shape[0]
+        cur['input_ids'] = cur['input_ids'].unsqueeze(1).expand(-1, input_seq_len)
+        cur['decoder_input_ids'] = cur['decoder_input_ids'].unsqueeze(1).expand(-1, decoder_seq_len)
+
+    for cur in train_data:
+        input_seq_len = cur['input_ids'].shape[0]
+        decoder_seq_len = cur['decoder_input_ids'].shape[0]
+        cur['attention_mask'] = cur['attention_mask'].unsqueeze(1).expand(-1, input_seq_len)
+        cur['decoder_attention_mask'] = cur['decoder_attention_mask'].unsqueeze(1).expand(-1, decoder_seq_len)
+
+    return train_data
+
+
+
 
 def continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args):
     # 将模型设置为训练模式
@@ -276,19 +301,21 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
 
         # 使用tqdm创建进度条
         for cur in tqdm(train_data, desc=f'Epoch {epoch + 1}/{args.num_epoch}'):
-            # 将数据移到设备上
-            print(type(cur))
-            print(cur)
+            # # 将数据移到设备上
             cur.pop('answer')
-            cur = {k: torch.tensor(v) for k, v in cur.items()}
-            print(cur.len())
-            print(cur.data())
+            # cur = {k: torch.tensor(v) for k, v in cur.items()}
+
+            print(cur['input_ids'].shape)
+            print(cur['attention_mask'].shape)
+            print(cur['decoder_input_ids'].shape)
+            print(cur['decoder_attention_mask'].shape)
+
+
             # 前向传播
-            prob = model(**cur)[0]
+            prob = model(**cur)
             mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
             prob = prob[:, :-1]
-            prob = prob.reshape((-1, prob.size(-1)))[mask]
-            labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask]
+            labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(-1)[mask]
             loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
             loss = loss_fct(prob, labels)
 
@@ -336,6 +363,7 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
 
 
 
+
 if __name__ == '__main__':
     args = init_argument()
 
@@ -344,7 +372,8 @@ if __name__ == '__main__':
     dev_data = prepare_data(args, args.dev_data, tokenizer, term='dev')
     print(type(train_data))
     print(type(dev_data))
-
+    train_data = data_normalization(train_data)
+    #dev_data = data_normalization(dev_data)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # 初始化模型和优化器
