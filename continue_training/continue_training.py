@@ -65,7 +65,8 @@ def create_data(data, tokenizer, max_len_generate, term='train'):
             features = {'input_ids': question_ids,
                         'decoder_input_ids': answer_ids,
                         'attention_mask': [1] * len(question_ids),
-                        'decoder_attention_mask': [1] * len(answer_ids)
+                        'decoder_attention_mask': [1] * len(answer_ids),
+                        'answer': answer
                         }
         elif term == 'dev':
             features = {'input_ids': question_ids,
@@ -264,92 +265,72 @@ def init_argument():
     return args
 
 
+def continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args):
+    # 将模型设置为训练模式
+    model.train()
 
-# def continue_training(model, data_loader, num_epochs=3, learning_rate=5e-5):
-#     # 使用AdamW优化器，指定学习率
-#     optimizer = AdamW(model.parameters(), lr=learning_rate)
-#
-#     for epoch in range(num_epochs):
-#         # 初始化损失
-#         total_loss = 0.0
-#
-#         # 使用tqdm创建进度条
-#         for batch in tqdm(data_loader, desc=f'Epoch {epoch + 1}/{num_epochs}'):
-#             # 将张量移到设备上
-#             batch = {k: v.to(device) for k, v in batch.items()}
-#
-#             # 前向传播
-#             outputs = model(**batch)
-#             loss = outputs.loss
-#
-#             # 反向传播和优化
-#             loss.backward()
-#             optimizer.step()
-#             optimizer.zero_grad()
-#
-#             # 累积总损失
-#             total_loss += loss.item()
-#
-#         # 打印每个epoch的平均损失
-#         average_loss = total_loss / len(data_loader)
-#         print(f"Epoch {epoch + 1}/{num_epochs}, 平均损失: {average_loss}")
-#
-#     # 保存微调后的模型
-#     model.save_pretrained("./fine_tuned_model")
-
-import torch.nn.functional as F
-
-def continue_training(model, train_data, tokenizer, num_epochs=3, learning_rate=5e-5):
-    """Continue training a saved model.
-
-    Args:
-        model: The loaded model to continue training.
-        train_data: The training data iterator (a list or list of lists).
-        tokenizer: The tokenizer used for the model.
-        num_epochs: Number of epochs to continue training.
-        learning_rate: Learning rate for the optimizer.
-    """
-
-    def load_model(model, model_path):
-        # 加载模型的状态字典
-        state_dict = torch.load(model_path)
-        model.load_state_dict(state_dict)
-        return model
-
-    model = load_model(model, os.path.join(args.model_dir, 'summary_model.pt'))
-
-    # 其他代码保持不变
-
-    from torch.optim import AdamW
-
-    optimizer = AdamW(model.parameters(), lr=learning_rate)  # 使用 PyTorch 内置的 AdamW
-
-    for epoch in range(num_epochs):
+    best_bleu_score = 0
+    for epoch in range(args.num_epoch):
+        # 初始化损失
         total_loss = 0.0
 
-        for batch in tqdm(train_data, desc='Epoch {}:'.format(epoch)):
-            batch = [tokenizer.encode(sample, return_tensors='pt', padding=True, max_length=args.max_len_generate) for sample in batch]  # 添加 padding 和 max_length 参数
-            batch = torch.cat(batch).to(device)
+        # 使用tqdm创建进度条
+        for cur in tqdm(train_data, desc=f'Epoch {epoch + 1}/{args.num_epoch}'):
+            # 将数据移到设备上
+            print(type(cur))
+            print(cur)
+            cur.pop('answer')
+            cur = {k: torch.tensor(v) for k, v in cur.items()}
+            print(cur.len())
+            print(cur.data())
+            # 前向传播
+            prob = model(**cur)[0]
+            mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
+            prob = prob[:, :-1]
+            prob = prob.reshape((-1, prob.size(-1)))[mask]
+            labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask]
+            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
+            loss = loss_fct(prob, labels)
 
-            inputs = {
-                'input_ids': batch,
-                # ... 其他输入张量
-            }
-
-            outputs = model(**inputs)
-            loss = outputs[0]  # Access the loss from model outputs
-
-            # 后续处理 loss（例如计算梯度、更新参数）
+            # 反向传播和优化
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
 
+            # 累积总损失
             total_loss += loss.item()
 
-        print("Epoch {}: Training Loss:s {}".format(epoch, total_loss / len(train_data)))
+        # 打印每个epoch的平均损失
+        average_loss = total_loss / len(train_data)
+        print(f"Epoch {epoch + 1}/{args.num_epoch}, 平均损失: {average_loss}")
 
-    # 保存训练后的模型
-    torch.save(model, './update_model')  # 替换为你要保存模型的路径
+        # 验证
+        model.eval()
+        generated_responses = []
+        reference_answers = []
+        for feature in tqdm(dev_data):
+            title = feature['answer']
+            content = {k: v for k, v in feature.items() if k != 'answer'}
+            gen = model.generate(max_length=args.max_len_generate,
+                                        eos_token_id=tokenizer.sep_token_id,
+                                        decoder_start_token_id=tokenizer.cls_token_id,
+                                        **content)
+            gen = tokenizer.batch_decode(gen, skip_special_tokens=True)
+            gen = [item.replace(' ', '') for item in gen]
+            generated_responses.extend(gen)
+            reference_answers.extend([title])
+
+        # 计算BLEU分数
+        bleu_score = compute_bleu([reference_answers], [generated_responses])
+        print("Validation BLEU Score: {}".format(bleu_score))
+
+        # 如果当前BLEU分数高于之前最好的分数，则保存模型
+        if bleu_score > best_bleu_score:
+            best_bleu_score = bleu_score
+            torch.save(model, os.path.join(args.model_dir, 'summary_model'))
+
+    # 保存最终模型
+    torch.save(model, os.path.join(args.model_dir, 'summary_model_final'))
 
 
 
@@ -361,7 +342,8 @@ if __name__ == '__main__':
     tokenizer = T5PegasusTokenizer.from_pretrained(args.pretrain_model)
     train_data = prepare_data(args, args.train_data, tokenizer, term='train')
     dev_data = prepare_data(args, args.dev_data, tokenizer, term='dev')
-
+    print(type(train_data))
+    print(type(dev_data))
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -372,4 +354,4 @@ if __name__ == '__main__':
 
     # 继续训练
     # continue_training(model, train_data,tokenizer=tokenizer, num_epochs=args.num_epoch, learning_rate=args.lr)
-    continue_training(model, train_data, tokenizer, num_epochs=5, learning_rate=1e-4)
+    continue_training(model,optimizer,train_data,dev_data, tokenizer, device, args)
