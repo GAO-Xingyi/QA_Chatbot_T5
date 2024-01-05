@@ -268,9 +268,7 @@ def init_argument():
 ——————————————————————————
 这一块的输入尺寸bug终于解决了
 ——————————————————————————
-感冒了，今天头好疼，又冷又热😰
-###我好像发现了win11的表情彩蛋####
-    😶‍🌫️ ————> delete 😶‍🌫          
+感冒了，今天头好疼，又冷又热😰   
 '''
 def data_normalization(train_data):
     for cur in train_data:
@@ -310,20 +308,48 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             # # 将数据移到设备上
             cur.pop('answer')
             # cur = {k: torch.tensor(v) for k, v in cur.items()}
-
+            cur = {k: v.to(device) for k, v in cur.items()}
+            seq_length = cur['decoder_input_ids'].shape[1]
             print(cur['input_ids'].shape)
             print(cur['attention_mask'].shape)
             print(cur['decoder_input_ids'].shape)
             print(cur['decoder_attention_mask'].shape)
-
-
+            print(seq_length)
+            print(cur['decoder_input_ids'])
             # 前向传播
-            prob = model(**cur)
-            mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
-            prob = prob[:, :-1]
-            labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(-1)[mask]
-            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
+            # prob = model(**cur)[0]
+            # mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
+            # prob = prob[:, :-1]
+            # labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(-1)[mask]
+
+            outputs = model(**cur)
+            prob = outputs.logits
+            mask = cur['decoder_attention_mask'][:, 1:].reshape(prob.shape[0], -1)
+
+            # prob = prob[:, :-1]
+            prob = prob[:, :, :2]  # 取 prob 的第二个维度的前 2 个元素
+
+
+            labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(prob.shape[0], -1)
+            # labels = labels.repeat_interleave(prob.shape[1], dim=1)[mask]  # 将 labels 平铺并重复
+            # labels = labels[:, :2]
+            # labels = labels.repeat_interleave(25000, dim=1)  # 将 labels 平铺并重复
+            labels = labels[mask].reshape(-1, 2)
+            labels = labels[:3]
+
+            print(prob.shape)
+            print(type(prob))
+            print(prob)
+            print(labels.shape)
+            print(type(labels))
+
+            loss_fct = torch.nn.CrossEntropyLoss()
+            print(labels.min(), labels.max())
+            # 假设您的损失函数是loss_fct
+            print(loss_fct)
+
             loss = loss_fct(prob, labels)
+
 
             # 反向传播和优化
             loss.backward()
@@ -381,10 +407,9 @@ if __name__ == '__main__':
     train_data = data_normalization(train_data)
     #dev_data = data_normalization(dev_data)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
     # 初始化模型和优化器
     model = MT5ForConditionalGeneration.from_pretrained(args.pretrain_model)
-
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     # 继续训练
