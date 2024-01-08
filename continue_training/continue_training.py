@@ -328,20 +328,24 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
 
             # prob = prob[:, :-1]
             prob = prob[:, :, :2]  # 取 prob 的第二个维度的前 2 个元素
+            # prob = prob.view(-1, 2)
 
+            # labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(prob.shape[0], -1)
+            labels = cur['decoder_input_ids'][:, 1:seq_length]
 
-            labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(prob.shape[0], -1)
             # labels = labels.repeat_interleave(prob.shape[1], dim=1)[mask]  # 将 labels 平铺并重复
             # labels = labels[:, :2]
             # labels = labels.repeat_interleave(25000, dim=1)  # 将 labels 平铺并重复
-            labels = labels[mask].reshape(-1, 2)
+            # labels = labels[mask].reshape(-1, 2)
             labels = labels[:3]
+
 
             print(prob.shape)
             print(type(prob))
             print(prob)
             print(labels.shape)
             print(type(labels))
+            print(labels)
 
             loss_fct = torch.nn.CrossEntropyLoss()
             print(labels.min(), labels.max())
