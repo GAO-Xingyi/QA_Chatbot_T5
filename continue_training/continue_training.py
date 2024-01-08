@@ -326,19 +326,34 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             prob = outputs.logits
             mask = cur['decoder_attention_mask'][:, 1:].reshape(prob.shape[0], -1)
 
-            # prob = prob[:, :-1]
-            prob = prob[:, :, :2]  # 取 prob 的第二个维度的前 2 个元素
-            # prob = prob.view(-1, 2)
+            # # prob = prob[:, :-1]
+            # prob = prob[:, :, :2]  # 取 prob 的第二个维度的前 2 个元素
+            # # prob = prob.view(-1, 2)
+            #
+            # # labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(prob.shape[0], -1)
+            # labels = cur['decoder_input_ids'][:, 1:seq_length]
+            #
+            # # labels = labels.repeat_interleave(prob.shape[1], dim=1)[mask]  # 将 labels 平铺并重复
+            # # labels = labels[:, :2]
+            # # labels = labels.repeat_interleave(25000, dim=1)  # 将 labels 平铺并重复
+            # # labels = labels[mask].reshape(-1, 2)
+            # labels = labels[:3]
 
-            # labels = cur['decoder_input_ids'][:, 1:seq_length].reshape(prob.shape[0], -1)
+            all_labels = [label for cur in train_data for label in cur['labels']]
+            num_classes = len(set(all_labels))
+            # 选择与正确类别对应的logits
+            prob = prob[:, :, :2]
             labels = cur['decoder_input_ids'][:, 1:seq_length]
+            # 展平logits和labels
+            prob = prob.reshape(-1, num_classes)
+            labels = labels.reshape(-1)
 
-            # labels = labels.repeat_interleave(prob.shape[1], dim=1)[mask]  # 将 labels 平铺并重复
-            # labels = labels[:, :2]
-            # labels = labels.repeat_interleave(25000, dim=1)  # 将 labels 平铺并重复
-            # labels = labels[mask].reshape(-1, 2)
-            labels = labels[:3]
+            # 创建一个表示attention是否应用的掩码
+            mask = mask.reshape(-1)
 
+            # 将掩码应用于logits和labels
+            prob = prob[mask]
+            labels = labels[mask]
 
             print(prob.shape)
             print(type(prob))
@@ -347,9 +362,8 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             print(type(labels))
             print(labels)
 
-            loss_fct = torch.nn.CrossEntropyLoss()
+            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100,num_classes=num_classes)
             print(labels.min(), labels.max())
-            # 假设您的损失函数是loss_fct
             print(loss_fct)
 
             loss = loss_fct(prob, labels)
