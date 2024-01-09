@@ -292,6 +292,57 @@ def data_normalization(train_data):
     return train_data
 
 
+def continue_train(model, optimizer, train_data, tokenizer, device, args):
+    # 将模型设置为训练模式
+    model.train()
+
+    for epoch in range(args.num_epoch):
+        # 初始化损失
+        total_loss = 0.0
+
+        # 使用tqdm创建进度条
+        for cur in tqdm(train_data, desc=f'Epoch {epoch + 1}/{args.num_epoch}'):
+            # 将数据移到设备上
+            cur = {k: v.to(device) for k, v in cur.items() if k != 'answer'}
+
+            # 前向传播
+            outputs = model(**cur)
+            logits = outputs.logits
+
+            # 选择与正确类别对应的logits
+            logits = logits[:, :, :2]
+
+            # 获取掩码，保留未填充部分
+            mask = cur['decoder_attention_mask'][:, 1:].reshape(-1, 2).bool()
+            print("Original Mask Shape:", cur['decoder_attention_mask'].shape)
+            print("mask shape:", mask.shape)
+
+            # 将掩码应用于logits和labels
+            logits = logits[mask.view(-1), :]
+            labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask.view(-1)]
+            print("labels shape:", labels.shape)
+
+            # 检查 labels 是否为空
+            if labels.numel() == 0:
+                continue
+
+            # 计算交叉熵损失
+            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
+            loss = loss_fct(logits, labels)
+
+            # 反向传播和优化
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
+            # 累积总损失
+            total_loss += loss.item()
+
+        # 打印每个epoch的平均损失
+        average_loss = total_loss / len(train_data)
+        print(f"Epoch {epoch + 1}/{args.num_epoch}, 平均损失: {average_loss}")
+
+
 
 
 def continue_training(model, optimizer, train_data, dev_data, tokenizer, device, args):
@@ -305,6 +356,8 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
 
         # 使用tqdm创建进度条
         for cur in tqdm(train_data, desc=f'Epoch {epoch + 1}/{args.num_epoch}'):
+            print(cur)
+
             # # 将数据移到设备上
             cur.pop('answer')
             # cur = {k: torch.tensor(v) for k, v in cur.items()}
@@ -325,7 +378,6 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             outputs = model(**cur)
             prob = outputs.logits
             mask = cur['decoder_attention_mask'][:, 1:].reshape(prob.shape[0], -1)
-
             # # prob = prob[:, :-1]
             # prob = prob[:, :, :2]  # 取 prob 的第二个维度的前 2 个元素
             # # prob = prob.view(-1, 2)
@@ -339,17 +391,20 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             # # labels = labels[mask].reshape(-1, 2)
             # labels = labels[:3]
 
-            all_labels = [label for cur in train_data for label in cur['labels']]
-            num_classes = len(set(all_labels))
             # 选择与正确类别对应的logits
             prob = prob[:, :, :2]
             labels = cur['decoder_input_ids'][:, 1:seq_length]
             # 展平logits和labels
-            prob = prob.reshape(-1, num_classes)
+            # prob = prob.reshape(-1, prob.size(-1))
+            prob = prob.reshape(-1, prob.size(-1))
             labels = labels.reshape(-1)
 
             # 创建一个表示attention是否应用的掩码
             mask = mask.reshape(-1)
+
+            print(prob.shape)
+            print(labels.shape)
+            print(mask.shape)
 
             # 将掩码应用于logits和labels
             prob = prob[mask]
@@ -362,7 +417,7 @@ def continue_training(model, optimizer, train_data, dev_data, tokenizer, device,
             print(type(labels))
             print(labels)
 
-            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100,num_classes=num_classes)
+            loss_fct = torch.nn.CrossEntropyLoss(ignore_index=10)
             print(labels.min(), labels.max())
             print(loss_fct)
 
@@ -432,4 +487,5 @@ if __name__ == '__main__':
 
     # 继续训练
     # continue_training(model, train_data,tokenizer=tokenizer, num_epochs=args.num_epoch, learning_rate=args.lr)
-    continue_training(model,optimizer,train_data,dev_data, tokenizer, device, args)
+    # continue_training(model,optimizer,train_data,dev_data, tokenizer, device, args)
+    continue_train(model, optimizer, train_data, tokenizer, device, args)
