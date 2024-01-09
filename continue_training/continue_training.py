@@ -276,6 +276,7 @@ def data_normalization(train_data):
         cur['attention_mask'] = torch.tensor(cur['attention_mask'])
         cur['decoder_input_ids'] = torch.tensor(cur['decoder_input_ids'])
         cur['decoder_attention_mask'] = torch.tensor(cur['decoder_attention_mask'])
+        cur['answer'] = torch.tensor([cur['answer']], dtype=torch.long)
 
     for cur in train_data:
         input_seq_len = cur['input_ids'].shape[0]
@@ -303,7 +304,10 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
         # 使用tqdm创建进度条
         for cur in tqdm(train_data, desc=f'Epoch {epoch + 1}/{args.num_epoch}'):
             # 将数据移到设备上
-            cur = {k: v.to(device) for k, v in cur.items() if k != 'answer'}
+            cur = {k: v.to(device) for k, v in cur.items()}
+
+            # 将answer转换为张量
+            cur['answer'] = torch.tensor([cur['answer']], dtype=torch.long)
 
             # 前向传播
             outputs = model(**cur)
@@ -312,23 +316,14 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
             # 选择与正确类别对应的logits
             logits = logits[:, :, :2]
 
-            print("decoder_attention_mask shape",cur['decoder_attention_mask'].shape)
-
             # 获取掩码，保留未填充部分
             mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
 
-            print("Original Mask Shape:", cur['decoder_attention_mask'].shape)
-            print("mask shape:", mask.shape)
-
             # 调整logits的维度
             logits = logits.view(-1, logits.size(-1))
-            print("logits shape:", logits.shape)
 
             # 将掩码应用于logits和labels
             logits = logits[mask, :]
-
-            labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask.view(-1)]
-            print("labels shape:", labels.shape)
 
             # 检查 labels 是否为空
             if labels.numel() == 0:
@@ -336,7 +331,7 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
 
             # 计算交叉熵损失
             loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(logits, labels)
+            loss = loss_fct(logits, cur['answer'][mask.view(-1)])
 
             # 反向传播和优化
             loss.backward()
@@ -349,6 +344,7 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
         # 打印每个epoch的平均损失
         average_loss = total_loss / len(train_data)
         print(f"Epoch {epoch + 1}/{args.num_epoch}, 平均损失: {average_loss}")
+
 
 
 
