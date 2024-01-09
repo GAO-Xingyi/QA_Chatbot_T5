@@ -312,13 +312,21 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
             # 选择与正确类别对应的logits
             logits = logits[:, :, :2]
 
+            print("decoder_attention_mask shape",cur['decoder_attention_mask'].shape)
+
             # 获取掩码，保留未填充部分
-            mask = cur['decoder_attention_mask'][:, 1:].reshape(-1, 2).bool()
+            mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
+
             print("Original Mask Shape:", cur['decoder_attention_mask'].shape)
             print("mask shape:", mask.shape)
 
+            # 调整logits的维度
+            logits = logits.view(-1, logits.size(-1))
+            print("logits shape:", logits.shape)
+
             # 将掩码应用于logits和labels
-            logits = logits[mask.view(-1), :]
+            logits = logits[mask, :]
+
             labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask.view(-1)]
             print("labels shape:", labels.shape)
 
@@ -341,6 +349,7 @@ def continue_train(model, optimizer, train_data, tokenizer, device, args):
         # 打印每个epoch的平均损失
         average_loss = total_loss / len(train_data)
         print(f"Epoch {epoch + 1}/{args.num_epoch}, 平均损失: {average_loss}")
+
 
 
 
