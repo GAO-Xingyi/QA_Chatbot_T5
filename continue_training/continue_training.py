@@ -276,7 +276,8 @@ def data_normalization(train_data):
         cur['attention_mask'] = torch.tensor(cur['attention_mask'])
         cur['decoder_input_ids'] = torch.tensor(cur['decoder_input_ids'])
         cur['decoder_attention_mask'] = torch.tensor(cur['decoder_attention_mask'])
-        cur['answer'] = torch.tensor([cur['answer']], dtype=torch.long)
+        cur['answer'] = list(map(int, cur['answer']))
+        cur['answer'] = torch.tensor(cur['answer'], dtype=torch.long)
 
     for cur in train_data:
         input_seq_len = cur['input_ids'].shape[0]
