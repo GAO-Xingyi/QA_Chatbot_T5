@@ -1,3 +1,8 @@
+"""
+#### 这一块的代码是无效代码
+#### 关于迁移继续学习的代码见：transfer_learning.py
+"""
+
 import os
 import re
 import torch
