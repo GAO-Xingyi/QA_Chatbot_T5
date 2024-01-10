@@ -6,12 +6,11 @@ import numpy as np
 from tqdm.auto import tqdm
 from bert4torch.models import *
 from torch.utils.data import DataLoader, Dataset
-from transformers import MT5ForConditionalGeneration, BertTokenizer
-#from transformers import BertTokenizer
+from transformers import MT5ForConditionalGeneration, BertTokenizer, MT5Config, AdamW
+# from transformers import BertTokenizer
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 import nltk
-import json
 
 int_classes = int
 string_classes = str
@@ -213,19 +212,13 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
 
         # 保存模型
         if args.data_parallel and torch.cuda.is_available():
-            torch.save(model.module, os.path.join(args.model_dir, 'QAmodel'))
+            torch.save(model.module, os.path.join(args.model_dir, 'summary_model'))
         else:
-            torch.save(model, os.path.join(args.model_dir, 'QAmodel'))
+            torch.save(model, os.path.join(args.model_dir, 'summary_model'))
 
-        # 保存模型参数
-        torch.save(model.state_dict(), os.path.join(args.model_dir, 'pytorch_model.bin'))
-
-        # 保存模型配置
         config = model.config
         config_dict = config.to_dict()
         json.dump(config_dict, open(os.path.join(args.model_dir, 'config.json'), 'w', encoding='utf-8'))
-
-        # 保存词汇表
         tokenizer.save_vocabulary(os.path.join(args.model_dir, 'vocab.txt'))
 
     # 验证
@@ -260,33 +253,37 @@ def init_argument():
     parser = argparse.ArgumentParser(description='t5-pegasus-chinese')
     parser.add_argument('--train_data', default='./data/caoling.tsv')
     parser.add_argument('--dev_data', default='./data/caoling.tsv')
-    parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./caoling_QA_model')
+    parser.add_argument('--pretrain_model', default='./model')
+    parser.add_argument('--model_dir', default='./finetuned_model')
 
-    parser.add_argument('--num_epoch', default=3000, help='number of epoch')
+    parser.add_argument('--num_epoch', default=2000, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
-    parser.add_argument('--lr', default=2e-5, help='learning rate')
+    parser.add_argument('--lr', default=2e-4, help='learning rate')
     parser.add_argument('--data_parallel', default=False)
     parser.add_argument('--max_len', default=25, help='max length of inputs')
     parser.add_argument('--max_len_generate', default=350, help='max length of outputs')
+
+    parser.add_argument('--new_train_data', default='./update_dataset/caoling.tsv')
 
     args = parser.parse_args()
     return args
 
 
 if __name__ == '__main__':
-    # step 1. init argument
+
     args = init_argument()
-
-    # step 2. prepare training data and validation data
     tokenizer = T5PegasusTokenizer.from_pretrained(args.pretrain_model)
-    train_data = prepare_data(args, args.train_data, tokenizer, term='train')
-    dev_data = prepare_data(args, args.dev_data, tokenizer, term='dev')
+    train_data = prepare_data(args, args.new_train_data, tokenizer, term='train')
+    dev_data = prepare_data(args, args.new_train_data, tokenizer, term='dev')
 
-    # step 3. load pretrain model
+    model = MT5ForConditionalGeneration.from_pretrained(args.pretrain_model)
+
+    # 冻结参数
+    for param in model.parameters():
+        param.requires_grad = False
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # Check the number of available GPUs
     if torch.cuda.is_available():
         num_gpus = torch.cuda.device_count()
         print(f"Number of available GPUs: {num_gpus}")
@@ -298,13 +295,12 @@ if __name__ == '__main__':
         if args.data_parallel and num_gpus > 1:
             model = torch.nn.DataParallel(model)
 
-    # step 4. finetune
-    adam = torch.optim.Adam(model.parameters(), lr=args.lr)
-
-    # Adjust the num_workers based on your system specifications
     train_data = DataLoader(train_data, batch_size=args.batch_size, collate_fn=default_collate,
                             pin_memory=True, num_workers=4)
     dev_data = DataLoader(dev_data, batch_size=args.batch_size, collate_fn=default_collate,
                           pin_memory=True, num_workers=4)
 
-    train_model(model, adam, train_data, dev_data, tokenizer, device, args)
+    # 训练模型
+    train_model(model, AdamW(model.parameters(), lr=args.lr), train_data, dev_data, tokenizer, device, args)
+
+
