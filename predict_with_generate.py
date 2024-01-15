@@ -247,7 +247,7 @@ def init_argument():
     parser.add_argument('--test_data', default='./data/predict.tsv')
     parser.add_argument('--result_file', default='./data/predict_result.tsv')
     parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model', default='./saved_model_new_350_update/summary_model')
+    parser.add_argument('--model', default='./continue_training/finetuned_model/summary_model')
 
     parser.add_argument('--batch_size', default=16, help='batch size')
     parser.add_argument('--max_len', default=25, help='max length of inputs')
