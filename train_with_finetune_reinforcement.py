@@ -7,10 +7,11 @@ from tqdm.auto import tqdm
 from bert4torch.models import *
 from torch.utils.data import DataLoader, Dataset
 from transformers import MT5ForConditionalGeneration, BertTokenizer
-from transformers import BertTokenizer
+#from transformers import BertTokenizer
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
 import nltk
+import json
 
 int_classes = int
 string_classes = str
@@ -45,16 +46,16 @@ def load_data(filename):
     return D
 
 
-def create_data(data, tokenizer, max_len=25, term='train'):
+def create_data(data, tokenizer, max_len_generate, term='train'):
     ret, flag = [], True
     for item in data:
         question = item.get('question', 'Default Question')
         answer = item['answer']
 
         question_ids = tokenizer.encode(
-            question, max_length=max_len, truncation='only_first')
+            question, max_length=max_len_generate, truncation='only_first')
         answer_ids = tokenizer.encode(
-            answer, max_length=max_len, truncation='only_first')
+            answer, max_length=max_len_generate, truncation='only_first')
 
         if flag and term == 'train':
             flag = False
@@ -63,8 +64,7 @@ def create_data(data, tokenizer, max_len=25, term='train'):
             features = {'input_ids': question_ids,
                         'decoder_input_ids': answer_ids,
                         'attention_mask': [1] * len(question_ids),
-                        'decoder_attention_mask': [1] * len(answer_ids),
-                        'answer': answer
+                        'decoder_attention_mask': [1] * len(answer_ids)
                         }
         elif term == 'dev':
             features = {'input_ids': question_ids,
@@ -123,7 +123,9 @@ def sequence_padding(inputs, length=None, padding=0):
 
 
 def default_collate(batch):
-
+    """组batch
+    各个数据域分别转换为tensor，tensor第一个维度等于batch_size
+    """
     np_str_obj_array_pattern = re.compile(r'[SaUO]')
     default_collate_err_msg_format = (
         "default_collate: batch must contain tensors, numpy arrays, numbers, "
@@ -166,8 +168,10 @@ def default_collate(batch):
 
 
 def prepare_data(args, data_path, tokenizer, term='train'):
+    """准备batch数据
+    """
     data = load_data(data_path)
-    data = create_data(data, tokenizer, args.max_len, term)
+    data = create_data(data, tokenizer, args.max_len_generate, term)
     data = KeyDataset(data)
     data = DataLoader(data, batch_size=args.batch_size,
                       collate_fn=default_collate)
@@ -175,10 +179,14 @@ def prepare_data(args, data_path, tokenizer, term='train'):
 
 
 def compute_bleu(references, hypotheses):
-    
+    """
+    计算BLEU分数
+    """
     smooth = nltk.translate.bleu_score.SmoothingFunction()
     bleu_score = nltk.translate.bleu_score.corpus_bleu(references, hypotheses, smoothing_function=smooth.method1)
     return bleu_score
+
+
 
 def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
     if not os.path.exists(args.model_dir):
@@ -188,51 +196,30 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
     for epoch in range(args.num_epoch):
         model.train()
         for i, cur in enumerate(tqdm(train_data, desc='Epoch {}:'.format(epoch))):
-            cur = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in cur.items()}
-
-            # 移除 'answer' 键
-            answer = cur.pop('answer', None)
-
-            # 在模型的输入中移除 'answer' 这个关键字参数
-            content = {k: v for k, v in cur.items()}
-            prob = model(**content)[0]
-
+            cur = {k: v.to(device) for k, v in cur.items()}
+            prob = model(**cur)[0]
             mask = cur['decoder_attention_mask'][:, 1:].reshape(-1).bool()
             prob = prob[:, :-1]
             prob = prob.reshape((-1, prob.size(-1)))[mask]
             labels = cur['decoder_input_ids'][:, 1:].reshape(-1)[mask]
             loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
             loss = loss_fct(prob, labels)
-
-            # 计算BLEU分数并作为奖励信号
-            generated_responses = model.generate(max_length=args.max_len_generate,
-                                                 eos_token_id=tokenizer.sep_token_id,
-                                                 decoder_start_token_id=tokenizer.cls_token_id,
-                                                 **content)
-            generated_responses = tokenizer.batch_decode(generated_responses, skip_special_tokens=True)
-            generated_responses = [item.replace(' ', '') for item in generated_responses]
-
-            reference_answers = [answer]
-            reward = compute_bleu([reference_answers], [generated_responses])
-
-            # 使用奖励信号更新模型参数
+            if i % 100 == 0:
+                print("Iter {}:  Training Loss: {}".format(i, loss.item()))
             loss.backward()
             adam.step()
             adam.zero_grad()
 
-            # 打印训练信息
-            if i % 100 == 0:
-                print("Iter {}: Training Loss: {}, BLEU: {}".format(i, loss.item(), reward))
+        # 在每个epoch之后计算BLEU分数
+        bleu_score = evaluate_bleu(model, dev_data, tokenizer, device, args)
+        print("Epoch {}: Validation BLEU Score: {}".format(epoch, bleu_score))
 
-        # 保存每个epoch的模型
-        if args.data_parallel and torch.cuda.is_available():
-            torch.save(model.module, os.path.join(
-                args.model_dir, 'summary_model_epoch_{}'.format(epoch)))
-        else:
-            torch.save(model, os.path.join(
-                args.model_dir, 'summary_model_epoch_{}'.format(epoch)))
+        # 仅在BLEU分数提高时保存模型
+        if bleu_score > best_bleu_score:
+            best_bleu_score = bleu_score
+            save_model(model, tokenizer, args)
 
-        # 在最后一个epoch结束后进行一次验证
+def evaluate_bleu(model, dev_data, tokenizer, device, args):
     model.eval()
     generated_responses = []
     reference_answers = []
@@ -256,7 +243,26 @@ def train_model(model, adam, train_data, dev_data, tokenizer, device, args):
 
     # 计算BLEU分数
     bleu_score = compute_bleu([reference_answers], [generated_responses])
-    print("Validation BLEU Score (End of Training): {}".format(bleu_score))
+    return bleu_score
+
+def save_model(model, tokenizer, args):
+    # 保存模型
+    if args.data_parallel and torch.cuda.is_available():
+        torch.save(model.module, os.path.join(args.model_dir, 'QAmodel'))
+    else:
+        torch.save(model, os.path.join(args.model_dir, 'QAmodel'))
+
+    # 保存模型参数
+    torch.save(model.state_dict(), os.path.join(args.model_dir, 'pytorch_model.bin'))
+
+    # 保存模型配置
+    config = model.config
+    config_dict = config.to_dict()
+    json.dump(config_dict, open(os.path.join(args.model_dir, 'config.json'), 'w', encoding='utf-8'))
+
+    # 保存词汇表
+    tokenizer.save_vocabulary(os.path.join(args.model_dir, 'vocab.txt'))
+
 
 
 
@@ -265,15 +271,14 @@ def init_argument():
     parser.add_argument('--train_data', default='./data/caoling.tsv')
     parser.add_argument('--dev_data', default='./data/caoling.tsv')
     parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./saved_model_80e')
+    parser.add_argument('--model_dir', default='./caoling_QA_model')
 
-    parser.add_argument('--num_epoch', default=80, help='number of epoch')
+    parser.add_argument('--num_epoch', default=2000, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
     parser.add_argument('--lr', default=2e-4, help='learning rate')
     parser.add_argument('--data_parallel', default=False)
     parser.add_argument('--max_len', default=25, help='max length of inputs')
-    parser.add_argument('--max_len_generate', default=350,
-                        help='max length of outputs')
+    parser.add_argument('--max_len_generate', default=350, help='max length of outputs')
 
     args = parser.parse_args()
     return args
