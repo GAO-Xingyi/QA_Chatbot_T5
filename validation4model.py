@@ -256,7 +256,7 @@ def init_argument():
     parser.add_argument('--train_data', default='./data/caoling.tsv')
     parser.add_argument('--dev_data', default='./data/caoling.tsv')
     parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./saved_model_2000')
+    parser.add_argument('--model_dir', default='./caoling_QA_model/QAmodel')
 
     parser.add_argument('--num_epoch', default=2000, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
@@ -317,8 +317,8 @@ if __name__ == '__main__':
 
     # Load pre-trained model
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model_path = './saved_model_new_350_update/summary_model'  # Update with your saved model path
-    model = torch.load(model_path, map_location=device)
+    # model_path = './saved_model_new_350_update/summary_model'
+    model = torch.load(args.model_dir, map_location=device)
     model.to(device)
 
     # Prepare validation data
