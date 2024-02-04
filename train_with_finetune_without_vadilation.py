@@ -264,7 +264,7 @@ def init_argument():
     parser.add_argument('--model_dir', default='./caoling_QA_model')
 
     parser.add_argument('--num_epoch', default=2000, help='number of epoch')
-    parser.add_argument('--batch_size', default=8, help='batch size')
+    parser.add_argument('--batch_size', default=16, help='batch size')
     parser.add_argument('--lr', default=2e-4, help='learning rate')
     parser.add_argument('--data_parallel', default=False)
     parser.add_argument('--max_len', default=25, help='max length of inputs')
