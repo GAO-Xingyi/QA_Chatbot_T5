@@ -256,7 +256,7 @@ def init_argument():
     parser.add_argument('--train_data', default='./data/caoling.tsv')
     parser.add_argument('--dev_data', default='./data/caoling.tsv')
     parser.add_argument('--pretrain_model', default='./t5_pegasus_pretrain')
-    parser.add_argument('--model_dir', default='./caoling_QA_model/QAmodel')
+    parser.add_argument('--model_dir', default='./validation/QAmodel')
 
     parser.add_argument('--num_epoch', default=2000, help='number of epoch')
     parser.add_argument('--batch_size', default=16, help='batch size')
